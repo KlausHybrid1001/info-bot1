@@ -1,13 +1,7 @@
 # Use an official Python image as the base
 FROM python:3.9-slim
 
-# Set the working directory inside the container
-WORKDIR /app
-
-# Copy the current directory contents into the container
-COPY . /app
-
-# Install system dependencies for Chromium and other packages
+# Install system dependencies for Chromium and other packages, including build tools for PyMuPDF
 RUN apt-get update && \
     apt-get install -y \
     wget \
@@ -27,12 +21,24 @@ RUN apt-get update && \
     libxdamage1 \
     libxrandr2 \
     xdg-utils \
+    build-essential \
+    python3-dev \
+    libjpeg-dev \
+    liblcms2-dev \
+    libopenjp2-7-dev \
+    zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Chromium (latest version)
 RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
     apt install -y ./google-chrome-stable_current_amd64.deb && \
     rm google-chrome-stable_current_amd64.deb
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the current directory contents into the container
+COPY . /app
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt

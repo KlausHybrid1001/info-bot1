@@ -26,8 +26,9 @@ RUN apt-get update && \
     libxcomposite1 \
     libxdamage1 \
     libxrandr2 \
-    xdg-utils && \
-    rm -rf /var/lib/apt/lists/*
+    xdg-utils \
+    chromium \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies from requirements.txt
 COPY requirements.txt /app/

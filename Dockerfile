@@ -40,5 +40,8 @@ COPY . /app/
 # Set the working directory
 WORKDIR /app
 
+# Expose a port to satisfy Render's port binding requirement
+EXPOSE 8080
+
 # Command to run the bot
 CMD ["python", "bot.py"]

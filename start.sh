@@ -1,1 +1,2 @@
-404: Not Found
+#!/bin/bash
+python bot.py

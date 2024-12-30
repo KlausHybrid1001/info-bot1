@@ -40,8 +40,5 @@ COPY . /app/
 # Set the working directory
 WORKDIR /app
 
-# Expose the port (optional: if Render requires it)
-EXPOSE 5000
-
 # Command to run the bot
 CMD ["python", "bot.py"]

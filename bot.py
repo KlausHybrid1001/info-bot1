@@ -7,7 +7,7 @@ from pyppeteer import launch
 import fitz  # PyMuPDF
 
 # Your bot token (replace this with your actual bot token)
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN = 7597041420:AAG08GC3pzwKT0S2kG0bl3xX0NCSbdLNG6A
 
 # Path to the locally installed Chromium executable
 CHROMIUM_PATH = r"C:\Program Files\Chromium\Application\chrome.exe"  # Adjust if needed

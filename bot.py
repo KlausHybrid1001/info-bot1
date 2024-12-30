@@ -7,7 +7,7 @@ from pyppeteer import launch
 import fitz  # PyMuPDF
 
 # Your bot token (replace this with your actual bot token)
-BOT_TOKEN = "7597041420:AAG08GC3pzwKT0S2kG0bl3xX0NCSbdLNG6A"
+BOT_TOKEN = os.getenv("TELEGRAM_TOKEN")  # Get the bot token from environment variable
 
 # Path to the locally installed Chromium executable (for Render use default system Chromium)
 CHROMIUM_PATH = "/usr/bin/chromium"  # Render uses a default Chromium installation

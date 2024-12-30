@@ -9,12 +9,12 @@ import fitz  # PyMuPDF
 # Your bot token (replace this with your actual bot token)
 BOT_TOKEN = "7597041420:AAG08GC3pzwKT0S2kG0bl3xX0NCSbdLNG6A"
 
-# Path to the locally installed Chromium executable
-CHROMIUM_PATH = r"C:\Program Files\Chromium\Application\chrome.exe"  # Adjust if needed
+# Path to the locally installed Chromium executable (for Render use default system Chromium)
+CHROMIUM_PATH = "/usr/bin/chromium"  # Render uses a default Chromium installation
 
-# Directory paths
-tmp_folder = r"C:\Users\AJAY\Desktop\DL INFO\tmp"
-output_folder = r"C:\Users\AJAY\Desktop\DL INFO"
+# Directory paths (adjusted for Render)
+tmp_folder = "/tmp"  # Use /tmp directory for temporary files
+output_folder = "/tmp"  # Store output PDFs in /tmp (temporary storage)
 
 # HTTP headers and cookies (make sure to use the latest ones if they change)
 HEADERS = {
@@ -26,10 +26,10 @@ HEADERS = {
 # Function to convert HTML to PDF using Pyppeteer (full HTML)
 async def convert_html_to_pdf(input_html, output_pdf):
     try:
-        # Launch Chromium using the local path
+        # Launch Chromium using the system path (for cloud)
         browser = await launch(
             headless=True,
-            executablePath=CHROMIUM_PATH,  # Use locally installed Chromium
+            executablePath=CHROMIUM_PATH,  # Use system Chromium
             args=['--no-sandbox', '--disable-setuid-sandbox']
         )
         page = await browser.newPage()

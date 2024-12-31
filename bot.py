@@ -5,21 +5,24 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 from pyppeteer import launch
 import fitz  # PyMuPDF
-from fastapi import FastAPI, Request
-from uvicorn import run
+from telegram.ext import Application
+import logging
 
-# Load environment variables
-BOT_TOKEN = os.getenv("TELEGRAM_TOKEN")
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+# Hardcoded values for testing
+BOT_TOKEN = "7597041420:AAGxS7T7fnwenj1FvlpR1bEl5niRm_tCAzU"  # Your Telegram Bot Token
 CHROMIUM_PATH = "/usr/bin/chromium"  # Make sure Chromium is installed in this path
 tmp_folder = "/tmp"  # Temporary folder for files
 output_folder = "/tmp"  # Output folder for the cropped PDFs
 
-# FastAPI app setup
-app = FastAPI()
+# FastAPI app setup is removed since we're switching to polling mode
 
 # Initialize the Telegram bot application
 application = Application.builder().token(BOT_TOKEN).build()
+
+# Enable logging
+logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+                    level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Function to convert HTML to PDF using Pyppeteer
 async def convert_html_to_pdf(input_html, output_pdf):
@@ -141,27 +144,6 @@ async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
 application.add_handler(CommandHandler("start", start))
 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_dl_number))
 
-# FastAPI Webhook endpoint
-@app.post("/webhook")
-async def telegram_webhook(request: Request):
-    data = await request.json()
-    # Process the update through the application
-    update = Update.de_json(data, application.bot)
-    await application.update_queue.put(update)
-    return {"status": "ok"}
-
-# Set the webhook for Telegram bot
-def set_webhook():
-    bot = application.bot
-    if WEBHOOK_URL:
-        bot.set_webhook(url=WEBHOOK_URL)
-        print(f"Webhook set to {WEBHOOK_URL}")
-    else:
-        print("WEBHOOK_URL not set. Please check your environment variables.")
-
-# Main entry point to run the bot with FastAPI and Uvicorn
+# Main entry point to run the bot with polling
 if __name__ == "__main__":
-    set_webhook()  # Set the webhook before running the server
-    
-    port = int(os.getenv("PORT", 8080))  # Render assigns the port dynamically
-    run(app, host="0.0.0.0", port=port)
+    application.run_polling()  # Use polling method instead of webhook

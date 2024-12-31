@@ -2,6 +2,7 @@ import os
 import requests
 import asyncio
 from fastapi import FastAPI, Request
+from pydantic import BaseModel
 import uvicorn
 from telegram import Bot, Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
@@ -162,13 +163,14 @@ async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # Webhook handler
-@app.post("/webhook/{token}")
-async def webhook_handler(token: str, request: Request):
-    if token != BOT_TOKEN:
-        return {"ok": False, "error": "Invalid token"}
-    try:
-        data = await request.json()
-        logger.info(f"Webhook received: {data}")
+@app.post("/webhook/{bot_token}")
+async def webhook(bot_token: str, request: Request):
+    if bot_token != "7597041420:AAGxS7T7fnwenj1bEl5niRm_tCAzU":
+        logging.error("Invalid bot token")
+        return {"status": "error", "message": "Invalid bot token"}
+    
+    data = await request.json()
+    logging.info(f"Received update: {data}")
         update = Update.de_json(data, application.bot)
         await application.process_update(update)
     except Exception as e:
@@ -186,9 +188,15 @@ async def set_webhook():
     except Exception as e:
         logger.error(f"Failed to set webhook: {e}")
 
+# Set the webhook
+def set_telegram_webhook():
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/setWebhook?url={webhook_url}"
+    response = requests.get(url)
+    print(response.json())
 
 # Main entry point
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-    asyncio.run(set_webhook())
+   # Set the webhook if necessary (can be done via Telegram API or here)
     uvicorn.run(app, host="0.0.0.0", port=port)
+

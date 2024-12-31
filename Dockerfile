@@ -1,4 +1,4 @@
-# Use an official Python image as the base
+# Use official Python image as base
 FROM python:3.9-slim
 
 # Install system dependencies
@@ -30,18 +30,18 @@ RUN apt-get update && \
     chromium \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies from requirements.txt
+# Install Python dependencies
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-# Copy the rest of the application
+# Copy the bot application code into the container
 COPY . /app/
 
 # Set the working directory
 WORKDIR /app
 
-# Expose a port to satisfy Render's port binding requirement
+# Expose the necessary port (use the dynamic port for Render)
 EXPOSE 8080
 
-# Command to run the bot
-CMD ["python", "bot.py"]
+# Command to run the FastAPI app with Uvicorn
+CMD ["uvicorn", "bot:app", "--host", "0.0.0.0", "--port", "8080"]

@@ -209,10 +209,21 @@ async def webhook_handler(token: str, request: Request):
         return {"ok": False, "error": str(e)}
     return {"ok": True}
 
-# Function to set up webhook
+# Function to set up the webhook
 async def set_webhook():
-    webhook_url = "https://yourdomain.com/webhook/" + BOT_TOKEN  # Replace with your actual domain
+    webhook_url = f"https://info-bot1-1.onrender.com/webhook/{BOT_TOKEN}"
     await application.bot.set_webhook(webhook_url)
+    logger.info(f"Webhook set to: {webhook_url}")
+
+# Function to start the bot locally
+@app.on_event("startup")
+async def on_startup():
+    """Setup webhook when the app starts."""
+    await set_webhook()
+
+# Run FastAPI app (with Uvicorn)
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
 # Run FastAPI app (with Uvicorn)
 if __name__ == "__main__":

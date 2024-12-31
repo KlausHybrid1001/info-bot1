@@ -5,8 +5,10 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 from pyppeteer import launch
 import fitz  # PyMuPDF
-from telegram.ext import Application
+from fastapi import FastAPI
 import logging
+from uvicorn import run
+import threading
 
 # Hardcoded values for testing
 BOT_TOKEN = "7597041420:AAGxS7T7fnwenj1FvlpR1bEl5niRm_tCAzU"  # Your Telegram Bot Token
@@ -14,9 +16,8 @@ CHROMIUM_PATH = "/usr/bin/chromium"  # Make sure Chromium is installed in this p
 tmp_folder = "/tmp"  # Temporary folder for files
 output_folder = "/tmp"  # Output folder for the cropped PDFs
 
-# FastAPI app setup is removed since we're switching to polling mode
-
-# Initialize the Telegram bot application
+# Initialize FastAPI app and Telegram bot application
+app = FastAPI()
 application = Application.builder().token(BOT_TOKEN).build()
 
 # Enable logging
@@ -144,6 +145,21 @@ async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
 application.add_handler(CommandHandler("start", start))
 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_dl_number))
 
-# Main entry point to run the bot with polling
+# Start the bot using long polling in a background thread (required for Render)
+def run_polling():
+    application.run_polling()
+
+# FastAPI endpoint for health check (can be accessed by Render)
+@app.get("/")
+async def root():
+    return {"status": "ok"}
+
+# Main entry point to run the bot with FastAPI and Uvicorn
 if __name__ == "__main__":
-    application.run_polling()  # Use polling method instead of webhook
+    # Start the polling in a separate thread
+    thread = threading.Thread(target=run_polling)
+    thread.start()
+
+    # Run the FastAPI app on the dynamic Render port
+    port = int(os.getenv("PORT", 8080))  # Render assigns the port dynamically
+    run(app, host="0.0.0.0", port=port)

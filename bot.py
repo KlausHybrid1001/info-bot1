@@ -9,6 +9,7 @@ from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandl
 from pyppeteer import launch
 import fitz  # PyMuPDF
 import logging
+from urllib.parse import unquote
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -161,10 +162,18 @@ async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"⚠️ An error occurred: {str(e)}")
 
+# GET handler for testing
+@app.get("/webhook/{bot_token}")
+async def test_webhook(bot_token: str):
+    return {"status": "ok", "message": "GET request received, but only POST is allowed for Telegram."}
+
 # Webhook handler
 @app.post("/webhook/{bot_token}")
 async def webhook(bot_token: str, request: Request):
-    if bot_token != "7597041420:AAGxS7T7fnwenj1bEl5niRm_tCAzU":
+    # Decode the bot token to handle URL-encoded characters
+    decoded_token = unquote(bot_token)
+
+    if decoded_token != "7597041420:AAGxS7T7fnwenj1bEl5niRm_tCAzU":
         logging.error("Invalid bot token")
         return {"status": "error", "message": "Invalid bot token"}
 

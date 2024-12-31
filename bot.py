@@ -172,7 +172,9 @@ async def test_webhook(bot_token: str):
 async def webhook(bot_token: str, request: Request):
     # Decode the bot token to handle URL-encoded characters
     decoded_token = unquote(bot_token)
+    logging.info(f"Decoded bot token: {decoded_token}")
 
+    # Compare the decoded token
     if decoded_token != "7597041420:AAGxS7T7fnwenj1bEl5niRm_tCAzU":
         logging.error("Invalid bot token")
         return {"status": "error", "message": "Invalid bot token"}

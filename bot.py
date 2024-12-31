@@ -11,7 +11,7 @@ from uvicorn import run
 
 # Hardcoded for testing (replace with secure methods in production)
 BOT_TOKEN = "7597041420:AAGxS7T7fnwenj1FvlpR1bEl5niRm_tCAzU"  # Replace with your token
-APP_URL = "https://your-render-app-url.com"  # Replace with your Render app's public URL
+APP_URL = "https://info-bot1-1.onrender.com"  # Replace with your Render app's public URL
 CHROMIUM_PATH = "/usr/bin/chromium"  # Path to Chromium binary
 tmp_folder = "/tmp"  # Temporary folder for files
 output_folder = "/tmp"  # Output folder for cropped PDFs

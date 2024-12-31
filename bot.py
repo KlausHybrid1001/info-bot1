@@ -1,13 +1,16 @@
 import os
 import requests
 import asyncio
-from telegram import Bot, Update
+from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 from pyppeteer import launch
 import fitz  # PyMuPDF
+from fastapi import FastAPI, Request
+from telegram.ext.webhook import WebhookHandler
+from uvicorn import run
 
-# Your bot token
-BOT_TOKEN = "7597041420:AAGxS7T7fnwenj1FvlpR1bEl5niRm_tCAzU"
+# Bot token (use environment variable for security)
+BOT_TOKEN = os.getenv("BOT_TOKEN", "your-bot-token-here")  # Replace with your bot token if not using env vars
 
 # Path to the locally installed Chromium executable
 CHROMIUM_PATH = "/usr/bin/chromium"  # Render uses a default Chromium installation
@@ -22,6 +25,13 @@ HEADERS = {
     "Referer": "https://sarathi.parivahan.gov.in/sarathiservice/relApplnSearch.do",
     "Cookie": "JSESSIONID=3899D603FD2EACF9C7678AEB5152EE12; _ga_W8LPQ3GPJF=deleted; _gid=GA1.3.2141960273.1735205718; GOTWL_MODE=2; _ga=GA1.1.1181027328.1735205717; STATEID=dklEcFJuUWtUd2FTYjdINVBvMDhJdz09"
 }
+
+# FastAPI setup
+app = FastAPI()
+
+# Telegram bot setup
+application = Application.builder().token(BOT_TOKEN).build()
+handler = WebhookHandler(application)
 
 # Function to convert HTML to PDF using Pyppeteer
 async def convert_html_to_pdf(input_html, output_pdf):
@@ -142,12 +152,18 @@ async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"⚠️ An error occurred: {str(e)}")
 
-# Main function to start the bot
-def main():
-    application = Application.builder().token(BOT_TOKEN).build()
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_dl_number))
-    application.run_polling()
+# Add handlers
+application.add_handler(CommandHandler("start", start))
+application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_dl_number))
 
+# Webhook endpoint
+@app.post("/webhook")
+async def telegram_webhook(request: Request):
+    data = await request.json()
+    await handler.handle_update(data)
+    return {"status": "ok"}
+
+# Main entry point
 if __name__ == "__main__":
-    main()
+    port = int(os.getenv("PORT", 8000))
+    run(app, host="0.0.0.0", port=port)

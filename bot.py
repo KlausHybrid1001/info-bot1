@@ -8,34 +8,24 @@ import fitz  # PyMuPDF
 from fastapi import FastAPI, Request
 from uvicorn import run
 
-# Bot token (use environment variable for security)
-BOT_TOKEN = os.getenv("BOT_TOKEN", "your-bot-token-here")  # Replace with your bot token if not using env vars
+# Load environment variables
+BOT_TOKEN = os.getenv("TELEGRAM_TOKEN")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+CHROMIUM_PATH = "/usr/bin/chromium"  # Make sure Chromium is installed in this path
+tmp_folder = "/tmp"  # Temporary folder for files
+output_folder = "/tmp"  # Output folder for the cropped PDFs
 
-# Path to the locally installed Chromium executable
-CHROMIUM_PATH = "/usr/bin/chromium"  # Render uses a default Chromium installation
-
-# Directory paths
-tmp_folder = "/tmp"  # Use /tmp directory for temporary files
-output_folder = "/tmp"  # Store output PDFs in /tmp (temporary storage)
-
-# HTTP headers and cookies
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    "Referer": "https://sarathi.parivahan.gov.in/sarathiservice/relApplnSearch.do",
-    "Cookie": "JSESSIONID=3899D603FD2EACF9C7678AEB5152EE12; _ga_W8LPQ3GPJF=deleted; _gid=GA1.3.2141960273.1735205718; GOTWL_MODE=2; _ga=GA1.1.1181027328.1735205717; STATEID=dklEcFJuUWtUd2FTYjdINVBvMDhJdz09"
-}
-
-# FastAPI setup
+# FastAPI app setup
 app = FastAPI()
 
-# Telegram bot setup
+# Initialize the Telegram bot application
 application = Application.builder().token(BOT_TOKEN).build()
 
 # Function to convert HTML to PDF using Pyppeteer
 async def convert_html_to_pdf(input_html, output_pdf):
     browser = None
     try:
-        # Launch Chromium
+        # Launch Chromium browser using Pyppeteer
         browser = await launch(
             headless=True,
             executablePath=CHROMIUM_PATH,
@@ -51,12 +41,10 @@ async def convert_html_to_pdf(input_html, output_pdf):
             return None
 
         await page.setContent(html_content)
-        print("[DEBUG] Waiting for the page to load...")
         await page.waitForSelector('body')
-        await asyncio.sleep(2)
+        await asyncio.sleep(2)  # Give time for page rendering
 
         await page.pdf({'path': output_pdf, 'printBackground': True})
-        print(f"[INFO] Full PDF saved at: {output_pdf}")
         return output_pdf
     except Exception as e:
         print(f"[ERROR] Error converting HTML to PDF: {e}")
@@ -80,7 +68,6 @@ def crop_pdf(input_pdf, output_pdf):
         cropped_pdf = fitz.open()
         cropped_pdf.insert_pdf(pdf_document, from_page=0, to_page=0)
         cropped_pdf.save(output_pdf)
-        print(f"[INFO] Cropped PDF saved at: {output_pdf}")
         pdf_document.close()
         cropped_pdf.close()
         return output_pdf
@@ -96,7 +83,7 @@ async def send_pdf_to_telegram(update: Update, context: ContextTypes.DEFAULT_TYP
                 chat_id=update.effective_chat.id,
                 document=pdf_file,
                 filename=os.path.basename(pdf_filename),
-                caption="Here is your DL INFO."
+                caption="Here is your DL info."
             )
         print(f"PDF {pdf_filename} sent successfully!")
     except Exception as e:
@@ -127,7 +114,7 @@ async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         await update.message.reply_text(f"⏳ Fetching DL details for {dl_number}. Please wait...")
-        response = requests.get(url, headers=HEADERS)
+        response = requests.get(url)
         if response.status_code == 200:
             with open(html_filename, "w", encoding="utf-8") as file:
                 file.write(response.text)
@@ -163,7 +150,18 @@ async def telegram_webhook(request: Request):
     await application.update_queue.put(update)
     return {"status": "ok"}
 
+# Set the webhook for Telegram bot
+def set_webhook():
+    bot = application.bot
+    if WEBHOOK_URL:
+        bot.set_webhook(url=WEBHOOK_URL)
+        print(f"Webhook set to {WEBHOOK_URL}")
+    else:
+        print("WEBHOOK_URL not set. Please check your environment variables.")
+
 # Main entry point to run the bot with FastAPI and Uvicorn
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8000))
+    set_webhook()  # Set the webhook before running the server
+    
+    port = int(os.getenv("PORT", 8080))  # Render assigns the port dynamically
     run(app, host="0.0.0.0", port=port)

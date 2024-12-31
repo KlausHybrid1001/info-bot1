@@ -162,10 +162,6 @@ async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"⚠️ An error occurred: {str(e)}")
 
-# GET handler for testing
-@app.get("/webhook/{bot_token}")
-async def test_webhook(bot_token: str):
-    return {"status": "ok", "message": "GET request received, but only POST is allowed for Telegram."}
 
 # Webhook handler
 @app.post("/webhook/{bot_token}")
@@ -175,7 +171,7 @@ async def webhook(bot_token: str, request: Request):
     logging.info(f"Decoded bot token: {decoded_token}")
 
     # Compare the decoded token
-    if decoded_token != "7597041420:AAGxS7T7fnwenj1bEl5niRm_tCAzU":
+    if decoded_token != BOT_TOKEN:
         logging.error("Invalid bot token")
         return {"status": "error", "message": "Invalid bot token"}
 
@@ -183,7 +179,7 @@ async def webhook(bot_token: str, request: Request):
         data = await request.json()
         logging.info(f"Received update: {data}")
         
-        update = Update.de_json(data, application.bot)  # Proper indentation
+        update = Update.de_json(data, application.bot)
         await application.process_update(update)
     except Exception as e:
         logging.error(f"Error processing webhook: {e}")
@@ -191,24 +187,19 @@ async def webhook(bot_token: str, request: Request):
     
     return {"ok": True}
 
+
 # Set webhook on startup
-async def set_webhook():
-    webhook_url = f"https://info-bot1-1.onrender.com/webhook/{bot_token}"
+@app.on_event("startup")
+async def on_startup():
+    webhook_url = f"https://info-bot1-1.onrender.com/webhook/{BOT_TOKEN}"
     try:
         await application.bot.set_webhook(webhook_url)
         logger.info(f"Webhook set to: {webhook_url}")
     except Exception as e:
         logger.error(f"Failed to set webhook: {e}")
 
-# Set the webhook
-def set_telegram_webhook():
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/setWebhook?url={webhook_url}"
-    response = requests.get(url)
-    print(response.json())
 
 # Main entry point
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-   # Set the webhook if necessary (can be done via Telegram API or here)
     uvicorn.run(app, host="0.0.0.0", port=port)
-

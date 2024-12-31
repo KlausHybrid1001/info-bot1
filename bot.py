@@ -6,7 +6,6 @@ from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandl
 from pyppeteer import launch
 import fitz  # PyMuPDF
 from fastapi import FastAPI, Request
-from telegram.ext.webhook import WebhookHandler
 from uvicorn import run
 
 # Bot token (use environment variable for security)
@@ -31,7 +30,6 @@ app = FastAPI()
 
 # Telegram bot setup
 application = Application.builder().token(BOT_TOKEN).build()
-handler = WebhookHandler(application)
 
 # Function to convert HTML to PDF using Pyppeteer
 async def convert_html_to_pdf(input_html, output_pdf):
@@ -156,14 +154,16 @@ async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
 application.add_handler(CommandHandler("start", start))
 application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_dl_number))
 
-# Webhook endpoint
+# FastAPI Webhook endpoint
 @app.post("/webhook")
 async def telegram_webhook(request: Request):
     data = await request.json()
-    await handler.handle_update(data)
+    # Process the update through the application
+    update = Update.de_json(data, application.bot)
+    await application.update_queue.put(update)
     return {"status": "ok"}
 
-# Main entry point
+# Main entry point to run the bot with FastAPI and Uvicorn
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     run(app, host="0.0.0.0", port=port)

@@ -193,7 +193,7 @@ async def webhook(bot_token: str, request: Request):
 
 # Set webhook on startup
 async def set_webhook():
-    webhook_url = f"https://info-bot1-1.onrender.com/webhook/7597041420:AAGxS7T7fnwenj1bEl5niRm_tCAzU"
+    https://info-bot1-1.onrender.com/webhook/{BOT_TOKEN}
     try:
         await application.bot.set_webhook(webhook_url)
         logger.info(f"Webhook set to: {webhook_url}")

@@ -1,6 +1,7 @@
 import os
 import requests
 import asyncio
+import threading
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 from pyppeteer import launch
@@ -8,13 +9,12 @@ import fitz  # PyMuPDF
 from fastapi import FastAPI
 import logging
 from uvicorn import run
-import threading
 
-# Hardcoded values for testing
-BOT_TOKEN = "7597041420:AAGxS7T7fnwenj1FvlpR1bEl5niRm_tCAzU"  # Your Telegram Bot Token
-CHROMIUM_PATH = "/usr/bin/chromium"  # Make sure Chromium is installed in this path
-tmp_folder = "/tmp"  # Temporary folder for files
-output_folder = "/tmp"  # Output folder for the cropped PDFs
+# Hardcoded for testing purposes (replace with secure methods in production)
+BOT_TOKEN = "7597041420:AAGxS7T7fnwenj1FvlpR1bEl5niRm_tCAzU"
+CHROMIUM_PATH = "/usr/bin/chromium"
+tmp_folder = "/tmp"
+output_folder = "/tmp"
 
 # Initialize FastAPI app and Telegram bot application
 app = FastAPI()
@@ -29,29 +29,26 @@ logger = logging.getLogger(__name__)
 async def convert_html_to_pdf(input_html, output_pdf):
     browser = None
     try:
-        # Launch Chromium browser using Pyppeteer
         browser = await launch(
             headless=True,
             executablePath=CHROMIUM_PATH,
             args=['--no-sandbox', '--disable-setuid-sandbox']
         )
         page = await browser.newPage()
-
         with open(input_html, 'r', encoding='utf-8') as f:
             html_content = f.read()
 
         if not html_content:
-            print("[ERROR] HTML content is empty!")
+            logger.error("HTML content is empty!")
             return None
 
         await page.setContent(html_content)
         await page.waitForSelector('body')
-        await asyncio.sleep(2)  # Give time for page rendering
-
+        await asyncio.sleep(2)  # Allow time for rendering
         await page.pdf({'path': output_pdf, 'printBackground': True})
         return output_pdf
     except Exception as e:
-        print(f"[ERROR] Error converting HTML to PDF: {e}")
+        logger.error(f"Error converting HTML to PDF: {e}")
         return None
     finally:
         if browser:
@@ -62,11 +59,10 @@ def crop_pdf(input_pdf, output_pdf):
     try:
         pdf_document = fitz.open(input_pdf)
         first_page = pdf_document.load_page(0)
-        page_height = first_page.rect.height
         crop_top = 165
         crop_bottom = 5
 
-        crop_rect = fitz.Rect(0, crop_top, first_page.rect.width, page_height - crop_bottom)
+        crop_rect = fitz.Rect(0, crop_top, first_page.rect.width, first_page.rect.height - crop_bottom)
         first_page.set_cropbox(crop_rect)
 
         cropped_pdf = fitz.open()
@@ -76,7 +72,7 @@ def crop_pdf(input_pdf, output_pdf):
         cropped_pdf.close()
         return output_pdf
     except Exception as e:
-        print(f"[ERROR] Error cropping PDF: {e}")
+        logger.error(f"Error cropping PDF: {e}")
         return None
 
 # Function to send the PDF to the user via Telegram bot
@@ -89,9 +85,9 @@ async def send_pdf_to_telegram(update: Update, context: ContextTypes.DEFAULT_TYP
                 filename=os.path.basename(pdf_filename),
                 caption="Here is your DL info."
             )
-        print(f"PDF {pdf_filename} sent successfully!")
+        logger.info(f"PDF {pdf_filename} sent successfully!")
     except Exception as e:
-        print(f"Failed to send PDF: {e}")
+        logger.error(f"Failed to send PDF: {e}")
         await update.message.reply_text("Failed to send the PDF file. Please try again.")
 
 # Start command to welcome users
@@ -119,6 +115,8 @@ async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         await update.message.reply_text(f"⏳ Fetching DL details for {dl_number}. Please wait...")
         response = requests.get(url)
+        logger.info(f"Fetched URL: {url} with status {response.status_code}")
+
         if response.status_code == 200:
             with open(html_filename, "w", encoding="utf-8") as file:
                 file.write(response.text)
@@ -139,5 +137,25 @@ async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await update.message.reply_text(f"❌ Failed to fetch details. HTTP Status: {response.status_code}")
     except Exception as e:
+        logger.error(f"Error fetching DL details: {e}")
         await update.message.reply_text(f"⚠️ An error occurred: {str(e)}")
 
+# Add handlers
+application.add_handler(CommandHandler("start", start))
+application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_dl_number))
+
+# Health check endpoint for Render
+@app.get("/")
+async def root():
+    return {"status": "ok"}
+
+# Start bot polling and FastAPI
+if __name__ == "__main__":
+    def run_polling():
+        application.run_polling()
+
+    thread = threading.Thread(target=run_polling)
+    thread.start()
+
+    port = int(os.getenv("PORT", 8080))
+    run(app, host="0.0.0.0", port=port)

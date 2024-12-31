@@ -161,23 +161,24 @@ async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"⚠️ An error occurred: {str(e)}")
 
-
 # Webhook handler
 @app.post("/webhook/{bot_token}")
 async def webhook(bot_token: str, request: Request):
     if bot_token != "7597041420:AAGxS7T7fnwenj1bEl5niRm_tCAzU":
         logging.error("Invalid bot token")
         return {"status": "error", "message": "Invalid bot token"}
-    
-    data = await request.json()
-    logging.info(f"Received update: {data}")
-        update = Update.de_json(data, application.bot)
+
+    try:
+        data = await request.json()
+        logging.info(f"Received update: {data}")
+        
+        update = Update.de_json(data, application.bot)  # Proper indentation
         await application.process_update(update)
     except Exception as e:
-        logger.error(f"Error processing webhook: {e}")
+        logging.error(f"Error processing webhook: {e}")
         return {"ok": False, "error": str(e)}
+    
     return {"ok": True}
-
 
 # Set webhook on startup
 async def set_webhook():

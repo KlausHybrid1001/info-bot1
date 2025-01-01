@@ -4,8 +4,8 @@ import time
 # URL of your server's keep-alive endpoint
 url = "https://info-bot1-1.onrender.com/keepalive"
 
-# Interval in seconds (e.g., every 10 minutes)
-interval = 600
+# Interval in seconds (e.g., every 5 minutes)
+interval = 300
 
 while True:
     try:

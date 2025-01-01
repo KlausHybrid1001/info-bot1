@@ -2,9 +2,8 @@ import os
 import requests
 import asyncio
 from fastapi import FastAPI, Request
-from pydantic import BaseModel
 import uvicorn
-from telegram import Bot, Update
+from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 from pyppeteer import launch
 import fitz  # PyMuPDF
@@ -92,7 +91,7 @@ def crop_pdf(input_pdf, output_pdf):
         first_page = pdf_document.load_page(0)
         page_height = first_page.rect.height
         crop_top = 165
-        crop_bottom = 1
+        crop_bottom = 5
 
         crop_rect = fitz.Rect(0, crop_top, first_page.rect.width, page_height - crop_bottom)
         first_page.set_cropbox(crop_rect)
@@ -172,6 +171,7 @@ async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             await update.message.reply_text(f"❌ Failed to fetch details. HTTP Status: {response.status_code}")
     except Exception as e:
+        logger.error(f"Error processing DL number: {e}")
         await update.message.reply_text(f"⚠️ An error occurred: {str(e)}")
 
 # Webhook handler
@@ -211,5 +211,5 @@ async def on_startup():
 
 # Main entry point
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))
+    port = int(os.environ.get("PORT", 8080))
     uvicorn.run(app, host="0.0.0.0", port=port)

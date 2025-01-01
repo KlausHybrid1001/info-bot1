@@ -40,6 +40,9 @@ app = FastAPI()
 # Telegram Application instance
 application = Application.builder().token(BOT_TOKEN).build()
 
+# Initialize the application
+async def initialize_application():
+    await application.initialize()
 
 # Function to convert HTML to PDF using Pyppeteer
 async def convert_html_to_pdf(input_html, output_pdf):
@@ -75,7 +78,6 @@ async def convert_html_to_pdf(input_html, output_pdf):
         if browser:
             await browser.close()
 
-
 # Function to crop the first page of the generated PDF
 def crop_pdf(input_pdf, output_pdf):
     try:
@@ -99,7 +101,6 @@ def crop_pdf(input_pdf, output_pdf):
         logger.error(f"Error cropping PDF: {e}")
         return None
 
-
 # Function to send the PDF to the user via Telegram bot
 async def send_pdf_to_telegram(update: Update, context: ContextTypes.DEFAULT_TYPE, pdf_filename):
     try:
@@ -115,11 +116,9 @@ async def send_pdf_to_telegram(update: Update, context: ContextTypes.DEFAULT_TYP
         logger.error(f"Failed to send PDF: {e}")
         await update.message.reply_text("Failed to send the PDF file. Please try again.")
 
-
 # Start command to welcome users
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Welcome! Send the DL number directly to get the PDF.")
-
 
 # Message handler for DL number input
 async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -164,7 +163,6 @@ async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         await update.message.reply_text(f"⚠️ An error occurred: {str(e)}")
 
-
 # Webhook handler
 @app.post("/webhook/{bot_token}")
 async def webhook(bot_token: str, request: Request):
@@ -172,7 +170,7 @@ async def webhook(bot_token: str, request: Request):
     decoded_token = unquote(bot_token)
     logging.info(f"Decoded bot token: {decoded_token}")
 
-    # Compare the decoded token with the BOT_TOKEN environment variable
+    # Compare the decoded token
     if decoded_token != BOT_TOKEN:
         logging.error("Invalid bot token")
         return {"status": "error", "message": "Invalid bot token"}
@@ -189,17 +187,16 @@ async def webhook(bot_token: str, request: Request):
     
     return {"ok": True}
 
-
 # Set webhook on startup
 @app.on_event("startup")
 async def on_startup():
     webhook_url = f"https://info-bot1-1.onrender.com/webhook/{BOT_TOKEN}"
     try:
+        await initialize_application()  # Initialize the application here
         await application.bot.set_webhook(webhook_url)
         logger.info(f"Webhook set to: {webhook_url}")
     except Exception as e:
         logger.error(f"Failed to set webhook: {e}")
-
 
 # Main entry point
 if __name__ == "__main__":

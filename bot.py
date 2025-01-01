@@ -40,12 +40,17 @@ app = FastAPI()
 # Telegram Application instance
 application = Application.builder().token(BOT_TOKEN).build()
 
-# Initialize the application
-async def initialize_application():
+# Function to initialize the bot and add handlers
+async def initialize_bot():
+    logger.info("Initializing the bot and adding handlers")
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_dl_number))
     await application.initialize()
+    logger.info("Bot initialized")
 
 # Function to convert HTML to PDF using Pyppeteer
 async def convert_html_to_pdf(input_html, output_pdf):
+    logger.info("Converting HTML to PDF")
     browser = None
     try:
         # Launch Chromium
@@ -80,6 +85,7 @@ async def convert_html_to_pdf(input_html, output_pdf):
 
 # Function to crop the first page of the generated PDF
 def crop_pdf(input_pdf, output_pdf):
+    logger.info("Cropping PDF")
     try:
         pdf_document = fitz.open(input_pdf)
         first_page = pdf_document.load_page(0)
@@ -103,6 +109,7 @@ def crop_pdf(input_pdf, output_pdf):
 
 # Function to send the PDF to the user via Telegram bot
 async def send_pdf_to_telegram(update: Update, context: ContextTypes.DEFAULT_TYPE, pdf_filename):
+    logger.info("Sending PDF to Telegram")
     try:
         with open(pdf_filename, "rb") as pdf_file:
             await context.bot.send_document(
@@ -118,10 +125,12 @@ async def send_pdf_to_telegram(update: Update, context: ContextTypes.DEFAULT_TYP
 
 # Start command to welcome users
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info("Received /start command")
     await update.message.reply_text("Welcome! Send the DL number directly to get the PDF.")
 
 # Message handler for DL number input
 async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info(f"Received DL number: {update.message.text}")
     dl_number = update.message.text.strip()
     if not dl_number:
         await update.message.reply_text("❌ Please provide a valid DL number.")
@@ -192,7 +201,7 @@ async def webhook(bot_token: str, request: Request):
 async def on_startup():
     webhook_url = f"https://info-bot1-1.onrender.com/webhook/{BOT_TOKEN}"
     try:
-        await initialize_application()  # Initialize the application here
+        await initialize_bot()  # Initialize the bot and add handlers
         await application.bot.set_webhook(webhook_url)
         logger.info(f"Webhook set to: {webhook_url}")
     except Exception as e:

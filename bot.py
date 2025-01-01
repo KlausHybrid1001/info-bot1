@@ -203,6 +203,23 @@ async def webhook(bot_token: str, request: Request):
 async def keepalive():
     return {"status": "ok"}
 
+# Function to run the keep-alive mechanism
+async def keep_alive():
+    url = "https://info-bot1-1.onrender.com/keepalive"
+    interval = 600  # 10 minutes
+
+    while True:
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                logger.info("Keep-alive request successful")
+            else:
+                logger.warning(f"Keep-alive request failed with status code: {response.status_code}")
+        except Exception as e:
+            logger.error(f"Error sending keep-alive request: {e}")
+
+        await asyncio.sleep(interval)
+
 # Set webhook on startup
 @app.on_event("startup")
 async def on_startup():
@@ -213,6 +230,9 @@ async def on_startup():
         logger.info(f"Webhook set to: {webhook_url}")
     except Exception as e:
         logger.error(f"Failed to set webhook: {e}")
+
+    # Run the keep-alive mechanism concurrently
+    asyncio.create_task(keep_alive())
 
 # Main entry point
 if __name__ == "__main__":

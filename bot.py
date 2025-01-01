@@ -10,6 +10,7 @@ from pyppeteer import launch
 import fitz  # PyMuPDF
 import logging
 from urllib.parse import unquote
+import re
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -132,8 +133,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(f"Received DL number: {update.message.text}")
     dl_number = update.message.text.strip()
-    if not dl_number:
-        await update.message.reply_text("❌ Please provide a valid DL number.")
+
+    # Validate the DL number format
+    if not re.match(r'^[A-Z]{2}\d{2} \d+$', dl_number):
+        await update.message.reply_text("❌ Invalid DL number format. Please provide a DL number in the format: MH02 19870039492")
         return
 
     html_filename = os.path.join(tmp_folder, f"{dl_number}_details.html")

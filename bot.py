@@ -135,7 +135,7 @@ async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Validate the DL number format
     if not re.match(r'^[A-Z]{2}\d{2} \d+$', dl_number):
-        await update.message.reply_text("❌ Invalid DL number format. foe eg.- Valid DL format: MH02 2015XXXXXXX")
+        await update.message.reply_text("❌ Invalid DL number format. Please provide a DL number in the format: MH02 19870039492")
         return
 
     html_filename = os.path.join(tmp_folder, f"{dl_number}_details.html")
@@ -203,23 +203,6 @@ async def webhook(bot_token: str, request: Request):
 async def keepalive():
     return {"status": "ok"}
 
-# Function to run the keep-alive mechanism
-async def keep_alive():
-    url = "https://info-bot1-1.onrender.com/keepalive"
-    interval = 300  # 05 minutes
-
-    while True:
-        try:
-            response = requests.get(url)
-            if response.status_code == 200:
-                logger.info("Keep-alive request successful")
-            else:
-                logger.warning(f"Keep-alive request failed with status code: {response.status_code}")
-        except Exception as e:
-            logger.error(f"Error sending keep-alive request: {e}")
-
-        await asyncio.sleep(interval)
-
 # Set webhook on startup
 @app.on_event("startup")
 async def on_startup():
@@ -230,9 +213,6 @@ async def on_startup():
         logger.info(f"Webhook set to: {webhook_url}")
     except Exception as e:
         logger.error(f"Failed to set webhook: {e}")
-
-    # Run the keep-alive mechanism concurrently
-    asyncio.create_task(keep_alive())
 
 # Main entry point
 if __name__ == "__main__":

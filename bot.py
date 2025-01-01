@@ -206,7 +206,7 @@ async def keepalive():
 # Function to run the keep-alive mechanism
 async def keep_alive():
     url = "https://info-bot1-1.onrender.com/keepalive"
-    interval = 300  # 5 minutes
+    interval = 300  # 05 minutes
 
     while True:
         try:
@@ -236,5 +236,5 @@ async def on_startup():
 
 # Main entry point
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
+    port = int(os.environ.get("PORT", 8080))  # Default port is 8080
     uvicorn.run(app, host="0.0.0.0", port=port)

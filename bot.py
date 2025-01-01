@@ -135,7 +135,7 @@ async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Validate the DL number format
     if not re.match(r'^[A-Z]{2}\d{2} \d+$', dl_number):
-        await update.message.reply_text("❌ Invalid DL number format. Please provide a DL number in the format: MH02 19870039492")
+        await update.message.reply_text("❌ Invalid DL number format. Please provide a DL number in the format. eg: MH02 2015xxxxxxx")
         return
 
     html_filename = os.path.join(tmp_folder, f"{dl_number}_details.html")

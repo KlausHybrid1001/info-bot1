@@ -140,11 +140,6 @@ async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
     pdf_filename = os.path.join(tmp_folder, f"{dl_number}_details.pdf")
     cropped_pdf_filename = os.path.join(output_folder, f"{dl_number}_cropped.pdf")
 
-    if os.path.exists(cropped_pdf_filename):
-        await update.message.reply_text("✅ PDF already exists. Sending the existing file...")
-        await send_pdf_to_telegram(update, context, cropped_pdf_filename)
-        return
-
     url = f"https://sarathi.parivahan.gov.in/sarathiservice/dlDetailsResult.do?reqDlNumber={dl_number}"
 
     try:
@@ -165,8 +160,12 @@ async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 return
 
             await send_pdf_to_telegram(update, context, cropped_pdf_filename)
+
+            # Clean up temporary files
+            logger.info(f"Removing temporary files: {html_filename} and {pdf_filename}")
             os.remove(html_filename)
             os.remove(pdf_filename)
+            logger.info("Temporary files removed successfully")
         else:
             await update.message.reply_text(f"❌ Failed to fetch details. HTTP Status: {response.status_code}")
     except Exception as e:

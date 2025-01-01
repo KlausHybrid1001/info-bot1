@@ -91,7 +91,7 @@ def crop_pdf(input_pdf, output_pdf):
         first_page = pdf_document.load_page(0)
         page_height = first_page.rect.height
         crop_top = 165
-        crop_bottom = 5
+        crop_bottom = 1
 
         crop_rect = fitz.Rect(0, crop_top, first_page.rect.width, page_height - crop_bottom)
         first_page.set_cropbox(crop_rect)

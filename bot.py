@@ -135,7 +135,7 @@ async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Validate the DL number format
     if not re.match(r'^[A-Z]{2}\d{2} \d+$', dl_number):
-        await update.message.reply_text("❌ Invalid DL number format. For eg: DL number format: MH02 1987XXXXX")
+        await update.message.reply_text("❌ Invalid DL number format. Please provide a DL number in the format: MH02 19870039492")
         return
 
     html_filename = os.path.join(tmp_folder, f"{dl_number}_details.html")
@@ -206,7 +206,7 @@ async def keepalive():
 # Function to run the keep-alive mechanism
 async def keep_alive():
     url = "https://info-bot1-1.onrender.com/keepalive"
-    interval = 600  # 10 minutes
+    interval = 300  # 5 minutes
 
     while True:
         try:

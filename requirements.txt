@@ -1,6 +1,7 @@
 # FastAPI and Uvicorn for serving the app
 fastapi==0.110.0
 uvicorn==0.23.1
+Flask==2.3.2
 
 # Telegram bot library for interaction
 python-telegram-bot==20.3

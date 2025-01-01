@@ -172,7 +172,7 @@ async def webhook(bot_token: str, request: Request):
     decoded_token = unquote(bot_token)
     logging.info(f"Decoded bot token: {decoded_token}")
 
-    # Compare the decoded token
+    # Compare the decoded token with the BOT_TOKEN environment variable
     if decoded_token != BOT_TOKEN:
         logging.error("Invalid bot token")
         return {"status": "error", "message": "Invalid bot token"}

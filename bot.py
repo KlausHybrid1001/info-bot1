@@ -135,7 +135,7 @@ async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Validate the DL number format
     if not re.match(r'^[A-Z]{2}\d{2} \d+$', dl_number):
-        await update.message.reply_text("❌ Invalid DL number format. For eg: DL No. FORMAT MH02 1990XXXXXXX")
+        await update.message.reply_text("❌ Invalid DL number format. foe eg.- Valid DL format: MH02 2015XXXXXXX")
         return
 
     html_filename = os.path.join(tmp_folder, f"{dl_number}_details.html")
@@ -236,6 +236,5 @@ async def on_startup():
 
 # Main entry point
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))  # Default port is 8080 if not set
-    logger.info(f"Starting server on port {port}")
+    port = int(os.environ.get("PORT", 8080))
     uvicorn.run(app, host="0.0.0.0", port=port)

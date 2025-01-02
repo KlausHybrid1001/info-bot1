@@ -27,11 +27,10 @@ CHROMIUM_PATH = "/usr/bin/chromium"  # Render uses a default Chromium installati
 tmp_folder = "/tmp"  # Use /tmp directory for temporary files
 output_folder = "/tmp"  # Store output PDFs in /tmp (temporary storage)
 
-# HTTP headers and cookies
+# HTTP headers without cookies
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    "Referer": "https://sarathi.parivahan.gov.in/sarathiservice/relApplnSearch.do",
-    "Cookie": "JSESSIONID=3899D603FD2EACF9C7678AEB5152EE12; _ga_W8LPQ3GPJF=deleted; _gid=GA1.3.2141960273.1735205718; GOTWL_MODE=2; _ga=GA1.1.1181027328.1735205717; STATEID=dklEcFJuUWtUd2FTYjdINVBvMDhJdz09"
+    "Referer": "https://sarathi.parivahan.gov.in/sarathiservice/relApplnSearch.do"
 }
 
 # FastAPI app
@@ -146,7 +145,15 @@ async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         await update.message.reply_text(f"⏳ Fetching DL details for {dl_number}. Please wait...")
-        response = requests.get(url, headers=HEADERS)
+        
+        # Create a session
+        with requests.Session() as session:
+            response = session.get(url, headers=HEADERS)
+            
+            # Clear session cookies and cache
+            session.cookies.clear()
+            session.close()
+        
         if response.status_code == 200:
             with open(html_filename, "w", encoding="utf-8") as file:
                 file.write(response.text)

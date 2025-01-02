@@ -82,7 +82,6 @@ async def convert_html_to_pdf(input_html, output_pdf):
         if browser:
             await browser.close()
 
-# Function to crop the first page of the generated PDF
 def crop_pdf(input_pdf, output_pdf):
     logger.info("Cropping PDF")
     try:
@@ -90,7 +89,7 @@ def crop_pdf(input_pdf, output_pdf):
         first_page = pdf_document.load_page(0)
         page_height = first_page.rect.height
         crop_top = 165
-        crop_bottom = 1
+        crop_bottom = 0  # Set to 0 to avoid cropping the bottom
 
         crop_rect = fitz.Rect(0, crop_top, first_page.rect.width, page_height - crop_bottom)
         first_page.set_cropbox(crop_rect)

@@ -3,11 +3,7 @@ services:
     name: telegram-bot
     env: python
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "python bot.py"
+    startCommand: "./start.sh"
     envVars:
-      - key: TELEGRAM_TOKEN
-        value: "7597041420:AAGxS7T7fnwenj1FvlpR1bEl5niRm_tCAzU"
-      - key: WEBHOOK_URL
-        value: "https://info-bot1.onrender.com/7597041420:AAGxS7T7fnwenj1FvlpR1bEl5niRm_tCAzU" # Replace with your Render service URL
       - key: PORT
         value: "8080"

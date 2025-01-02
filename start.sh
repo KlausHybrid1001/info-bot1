@@ -3,8 +3,11 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
-# Set the environment variable for the Telegram bot token
-export BOT_TOKEN="7597041420:AAGxS7T7fnwenj1FvlpR1bEl5niRm_tCAzU"
+# Ensure the BOT_TOKEN environment variable is set
+if [ -z "$BOT_TOKEN" ]; then
+  echo "BOT_TOKEN environment variable is not set."
+  exit 1
+fi
 
 # Ensure the PORT environment variable is set
 if [ -z "$PORT" ]; then
@@ -16,7 +19,7 @@ fi
 
 # Set the Telegram webhook
 echo "Setting Telegram Webhook..."
-WEBHOOK_URL="https://info-bot1-1.onrender.com/webhook/$BOT_TOKEN"
+WEBHOOK_URL="https://your-service.onrender.com/webhook/$BOT_TOKEN"
 RESPONSE=$(curl -s -w "%{http_code}" -o /dev/null "https://api.telegram.org/bot$BOT_TOKEN/setWebhook?url=$WEBHOOK_URL")
 
 if [ "$RESPONSE" -eq 200 ]; then

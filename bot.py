@@ -92,7 +92,7 @@ def crop_pdf(input_pdf, output_pdf):
         pdf_document = fitz.open(input_pdf)
         first_page = pdf_document.load_page(0)
         page_height = first_page.rect.height
-        crop_top = 100
+        crop_top = 120
         crop_bottom = 50  # Set to 0 to avoid cropping the bottom
 
         crop_rect = fitz.Rect(0, crop_top, first_page.rect.width, page_height - crop_bottom)

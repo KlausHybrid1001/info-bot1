@@ -82,29 +82,6 @@ async def convert_html_to_pdf(input_html, output_pdf):
         if browser:
             await browser.close()
 
-def crop_pdf(input_pdf, output_pdf):
-    logger.info("Cropping PDF")
-    try:
-        pdf_document = fitz.open(input_pdf)
-        first_page = pdf_document.load_page(0)
-        page_height = first_page.rect.height
-        crop_top = 165
-        crop_bottom = 0  # Set to 0 to avoid cropping the bottom
-
-        crop_rect = fitz.Rect(0, crop_top, first_page.rect.width, page_height - crop_bottom)
-        first_page.set_cropbox(crop_rect)
-
-        cropped_pdf = fitz.open()
-        cropped_pdf.insert_pdf(pdf_document, from_page=0, to_page=0)
-        cropped_pdf.save(output_pdf)
-        logger.info(f"Cropped PDF saved at: {output_pdf}")
-        pdf_document.close()
-        cropped_pdf.close()
-        return output_pdf
-    except Exception as e:
-        logger.error(f"Error cropping PDF: {e}")
-        return None
-
 # Function to send the PDF to the user via Telegram bot
 async def send_pdf_to_telegram(update: Update, context: ContextTypes.DEFAULT_TYPE, pdf_filename):
     logger.info("Sending PDF to Telegram")
@@ -138,7 +115,6 @@ async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     html_filename = os.path.join(tmp_folder, f"{dl_number}_details.html")
     pdf_filename = os.path.join(tmp_folder, f"{dl_number}_details.pdf")
-    cropped_pdf_filename = os.path.join(output_folder, f"{dl_number}_cropped.pdf")
 
     url = f"https://sarathi.parivahan.gov.in/sarathiservice/dlDetailsResult.do?reqDlNumber={dl_number}"
 
@@ -162,12 +138,7 @@ async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await update.message.reply_text("❌ Error converting HTML to PDF.")
                 return
 
-            cropped_pdf_filename = crop_pdf(pdf_filename, cropped_pdf_filename)
-            if cropped_pdf_filename is None:
-                await update.message.reply_text("❌ Error cropping the PDF.")
-                return
-
-            await send_pdf_to_telegram(update, context, cropped_pdf_filename)
+            await send_pdf_to_telegram(update, context, pdf_filename)
 
             # Clean up temporary files
             logger.info(f"Removing temporary files: {html_filename} and {pdf_filename}")
@@ -188,7 +159,7 @@ async def webhook(bot_token: str, request: Request):
     logging.info(f"Decoded bot token: {decoded_token}")
 
     # Compare the decoded token
-    if decoded_token != BOT_TOKEN:
+    if (decoded_token != BOT_TOKEN):
         logging.error("Invalid bot token")
         return {"status": "error", "message": "Invalid bot token"}
 

@@ -72,7 +72,11 @@ async def convert_html_to_pdf(input_html, output_pdf):
         await page.waitForSelector('body')
         await asyncio.sleep(2)
 
-        await page.pdf({'path': output_pdf, 'printBackground': True})
+        await page.pdf({
+            'path': output_pdf,
+            'printBackground': True,
+            'format': 'Legal'
+        })
         logger.info(f"Full PDF saved at: {output_pdf}")
         return output_pdf
     except Exception as e:

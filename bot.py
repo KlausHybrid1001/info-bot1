@@ -109,33 +109,6 @@ def crop_pdf(input_pdf, output_pdf):
         logger.error(f"Error cropping PDF: {e}")
         return None
 
-async def fetch_ll_pdf(ll_number: str, otp: str) -> str:
-    logger.info(f"Fetching LL PDF for number: {ll_number} with OTP: {otp}")
-    try:
-        browser = await launch(headless=True, executablePath=CHROMIUM_PATH, args=["--no-sandbox"])
-        page = await browser.newPage()
-
-        url = f"https://sarathi.parivahan.gov.in/sarathiservice/applicationredirect.do?q={ll_number}"
-        await page.goto(url)
-        await page.waitForSelector("input#otpnumber.form-control.NALOC", timeout=10000)
-
-        await page.type("input#otpnumber.form-control.NALOC", otp)
-        await asyncio.sleep(1)
-        await page.click("input#otpsubmit.btn.top-space")
-
-        await page.waitForNavigation({"waitUntil": "networkidle2"})
-        await asyncio.sleep(2)
-
-        pdf_path = os.path.join(output_folder, f"LL_{ll_number}.pdf")
-        await page.pdf({"path": pdf_path, "printBackground": True, "format": "A4"})
-
-        await browser.close()
-        logger.info(f"Downloaded LL PDF saved at: {pdf_path}")
-        return pdf_path
-    except Exception as e:
-        logger.error(f"LL PDF download failed: {e}")
-        return None
-
 # Function to send the PDF to the user via Telegram bot
 async def send_pdf_to_telegram(update: Update, context: ContextTypes.DEFAULT_TYPE, pdf_filename):
     logger.info("Sending PDF to Telegram")
@@ -159,34 +132,11 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Message handler for DL number input
 async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_input = update.message.text.strip()
-    logger.info(f"Received input: {user_input}")
+    logger.info(f"Received DL number: {update.message.text}")
+    dl_number = update.message.text.strip()
 
-    # Check for LL format
-    ll_match = re.match(r'^(LL|ll)\s*(\d+)$', user_input)
-    if ll_match:
-        ll_number = ll_match.group(2)
-        await update.message.reply_text("⏳ Processing LL request... Please wait and enter the OTP when prompted.")
-
-        # Store chat ID to match OTP later
-        context.chat_data["pending_ll"] = {"number": ll_number, "stage": "awaiting_otp"}
-        return
-
-    # Handle OTP message
-    if "pending_ll" in context.chat_data and context.chat_data["pending_ll"]["stage"] == "awaiting_otp":
-        otp = user_input.strip()
-        ll_number = context.chat_data["pending_ll"]["number"]
-        del context.chat_data["pending_ll"]
-
-        pdf_path = await fetch_ll_pdf(ll_number, otp)
-        if pdf_path:
-            await send_pdf_to_telegram(update, context, pdf_path)
-        else:
-            await update.message.reply_text("❌ Failed to download LL PDF.")
-        return
-
-    # DL fallback (existing DL handler)
-    if not re.match(r'^[A-Z]{2}\d{2} \d+$', user_input):
+    # Validate the DL number format
+    if not re.match(r'^[A-Z]{2}\d{2} \d+$', dl_number):
         await update.message.reply_text("❌ Invalid DL number format. For eg: Valid DL No. Format : MH02 2015XXXXXXX")
         return
 

@@ -130,15 +130,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info("Received /start command")
     await update.message.reply_text("Welcome! Send the DL number directly to get the PDF.")
 
-# Message handler for DL number input
-async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    logger.info(f"Received DL number: {update.message.text}")
-    dl_number = update.message.text.strip()
-
-    # Validate the DL number format
-    if not re.match(r'^[A-Z]{2}\d{2} \d+$', dl_number):
-        await update.message.reply_text("❌ Invalid DL number format. For eg: Valid DL No. Format : MH02 2015XXXXXXX")
-        return
 
     html_filename = os.path.join(tmp_folder, f"{dl_number}_details.html")
     pdf_filename = os.path.join(tmp_folder, f"{dl_number}_details.pdf")

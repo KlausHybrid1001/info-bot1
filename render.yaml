@@ -5,5 +5,5 @@ services:
     buildCommand: "pip install -r requirements.txt"
     startCommand: "./start.sh"
     envVars:
-      - key: PORT
-        value: "8080"
+      - key: BOT_TOKEN
+        sync: false     # Value set in the Render dashboard, not in repo

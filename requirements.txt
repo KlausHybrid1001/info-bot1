@@ -1,46 +1,30 @@
-# FastAPI and Uvicorn for serving the app
+# Web framework & server
 fastapi==0.110.0
 uvicorn==0.23.1
-Flask==2.3.2
 
-# Telegram bot library for interaction
+# Telegram bot
 python-telegram-bot==20.3
 
-# PDF generation and HTML rendering tools
-pyppeteer==2.0.0  # Chrome/Chromium headless rendering of HTML to PDF
-PyMuPDF==1.25.1  # PDF manipulation
-fpdf==1.7.2  # PDF creation
+# PDF and browser automation
+pyppeteer==2.0.0
+PyMuPDF==1.25.1
 
-# Web scraping and HTML parsing
-beautifulsoup4==4.12.3
-soupsieve==2.6
-
-# Web requests and parsing libraries
-requests==2.32.3
+# Networking
 httpx==0.24.1
-httpcore==0.17.3
+requests==2.32.3
 
-# Helper libraries
-pillow==11.0.0  # Image handling
-selenium==4.27.1  # Only if needed for other automation tasks
-PySocks==1.7.1  # SOCKS support if using proxy
-tqdm==4.67.1  # Progress bar for operations
+# (Optional/only if you use these in your project)
+# beautifulsoup4==4.12.3
+# selenium==4.27.1
+# pillow==11.0.0
 
-# Other utilities and dependencies
-attrs==24.3.0
-cffi==1.17.1
-charset-normalizer==3.4.1
-colorama==0.4.6
-cssselect2==0.7.0
-fonttools==4.55.3
-idna==3.10
-importlib_metadata==8.5.0
-pyee==11.1.1
-pyphen==0.17.0
-sortedcontainers==2.4.0
-trio==0.28.0
-trio-websocket==0.11.1
-typing_extensions==4.12.2
-urllib3==1.26.20
-zipp==3.21.0
-zopfli==0.2.3.post1
+# --- Only add below if you use them directly in your code ---
+
+# # PDF creation (not used in your current bot.py)
+# fpdf==1.7.2
+
+# # Proxy support for requests/telegram
+# PySocks==1.7.1
+
+# # Progress bars
+# tqdm==4.67.1

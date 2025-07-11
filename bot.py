@@ -9,6 +9,7 @@ from pyppeteer import launch
 import fitz  # PyMuPDF
 import logging
 from urllib.parse import unquote
+import re
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -33,14 +34,20 @@ async def convert_html_to_pdf(input_html, output_pdf):
         browser = await launch(
             headless=True,
             executablePath=CHROMIUM_PATH,
-            args=['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu', '--single-process', '--disable-dev-shm-usage']  # <--- CHANGED
+            args=[
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-gpu',
+                '--single-process',
+                '--disable-dev-shm-usage'
+            ]
         )
         page = await browser.newPage()
         with open(input_html, 'r', encoding='utf-8') as f:
             html_content = f.read()
         await page.setContent(html_content)
         await page.waitForSelector('body')
-        await asyncio.sleep(1)  # <--- Reduced wait
+        await asyncio.sleep(1)
         await page.pdf({'path': output_pdf, 'printBackground': True, 'format': 'Legal'})
         return output_pdf
     except Exception as e:
@@ -82,10 +89,23 @@ async def send_pdf_to_telegram(update: Update, context: ContextTypes.DEFAULT_TYP
         await update.message.reply_text("Failed to send the PDF file. Please try again.")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Welcome! Send your DL number (any format) to get the PDF. No strict format required.")
+    await update.message.reply_text(
+        "Welcome! Send your DL number (any format, e.g. 'AB12 1234567890') to get the PDF. "
+        "I'll try to fetch your info regardless of format."
+    )
 
 async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    dl_number = update.message.text.strip()
+    # Uppercase and clean input
+    dl_number = update.message.text.upper().strip()
+    dl_number = ' '.join(dl_number.split())  # Collapse multiple spaces
+
+    # Soft validation: Two letters, two numbers, space, 5+ numbers (but just warn, never reject)
+    soft_pattern = r'^[A-Z]{2}\d{2} \d{5,}$'
+    if not re.match(soft_pattern, dl_number):
+        await update.message.reply_text(
+            "ℹ️ Note: DL numbers are usually formatted like 'AB12 1234567890' (two letters, two numbers, space, then more numbers), but formats may vary by state. I'll try anyway!"
+        )
+
     html_filename = os.path.join(TMP_FOLDER, f"{dl_number}_details.html")
     pdf_filename = os.path.join(TMP_FOLDER, f"{dl_number}_details.pdf")
     cropped_pdf_filename = os.path.join(TMP_FOLDER, f"{dl_number}_cropped.pdf")
@@ -93,7 +113,7 @@ async def handle_dl_number(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         await update.message.reply_text(f"⏳ Fetching DL details for {dl_number}. Please wait...")
-        async with httpx.AsyncClient(timeout=15.0) as client:  # <--- Changed to async httpx, with timeout
+        async with httpx.AsyncClient(timeout=15.0) as client:
             response = await client.get(url, headers=HEADERS)
         if response.status_code == 200 and "<title>" in response.text:
             with open(html_filename, "w", encoding="utf-8") as file:
@@ -135,7 +155,8 @@ async def webhook(bot_token: str, request: Request):
         return {"ok": False, "error": str(e)}
     return {"ok": True}
 
-@app.get("/keepalive")
+# Support GET and HEAD for uptime pings
+@app.api_route("/keepalive", methods=["GET", "HEAD"])
 async def keepalive():
     return {"status": "ok"}
 

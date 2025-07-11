@@ -5,7 +5,7 @@ import time
 url = "https://info-bot1-1.onrender.com/keepalive"
 
 # Interval in seconds (e.g., every 10 minutes)
-interval = 600
+interval = 300
 
 while True:
     try:
